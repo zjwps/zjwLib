@@ -11,6 +11,16 @@ public class AwaitStep :INotifyCompletion
     public virtual void OnCompleted(Action continuation)
     {
         this.continuation = continuation;
+        Start();
+    }
+    private AwaitStep Start()
+    {
+        OnStart();
+        return this;
+    }
+    protected virtual void OnStart()
+    {
+
     }
     public void Complete()
     {
