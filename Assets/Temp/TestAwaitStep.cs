@@ -4,7 +4,6 @@
 /// </summary>
 public class TestAwaitStep : MonoBehaviour
 {
-    Step1 mStep1;
     void Start ()
     {
         Test2();
@@ -15,17 +14,16 @@ public class TestAwaitStep : MonoBehaviour
         await new Step1();
         Debug.Log("Test2 wait over");
     }
-    public class Step1:AwaitStep{
+    public class Step1: AwaitStep
+    {
         public Step1()
         {
-            //OnCompleted(null);
+            
         }
         protected override void OnStart()
         {
             Complete();
         }
-
-
 
     }
 }

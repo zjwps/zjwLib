@@ -534,7 +534,7 @@ namespace ZjwTools
             this.steps = steps;
             //startStep = steps[0];
             Step parentStep = null;
-            for (int i = 0; i < steps.Length; i++)
+            for (int i = 0; i < this.steps.Length; i++)
             {
                 if (startStep == null)
                 {
