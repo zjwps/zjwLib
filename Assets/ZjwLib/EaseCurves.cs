@@ -6,7 +6,7 @@ using UnityEngine;
 /// </summary>
 public class EaseCurves{
     
-    private Vector3 ease(Vector3 start, Vector3 end, Func<float, float, float, float> easeAction, float value)
+    public static Vector3 ease(Vector3 start, Vector3 end, Func<float, float, float, float> easeAction, float value)
     {
         var r = new Vector3();
         r.x = easeAction(start.x, end.x, value);

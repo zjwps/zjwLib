@@ -9,7 +9,7 @@ public static class FuncEx{
 
 public class AwaitStep :INotifyCompletion
 {
-    private event Action OnStartAction;
+    public event Action OnStartAction;
     private Action continuation;
     private bool isCompleted;
     public bool IsCompleted { get { return isCompleted; } }

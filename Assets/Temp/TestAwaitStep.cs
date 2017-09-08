@@ -7,6 +7,7 @@ public class TestAwaitStep : MonoBehaviour
     void Start ()
     {
         Test2();
+        
     }
     async void Test2()
     {
