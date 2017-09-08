@@ -1,7 +1,11 @@
 ﻿
 using System;
 using System.Runtime.CompilerServices;
-
+public static class FuncEx{
+    public static Func<X,Func<Y,R>> Currey<X,Y,R>(this Func<X,Y,R> func){
+        return x=>y=>func(x,y);
+    }
+}
 
 public class AwaitStep :INotifyCompletion
 {
