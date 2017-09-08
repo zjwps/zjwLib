@@ -1,9 +1,20 @@
+using System;
 using UnityEngine;
 
 /// <summary>
 /// tween 曲线计算公式,效果可以参考http://robertpenner.com/easing/easing_demo.html
 /// </summary>
 public class EaseCurves{
+    
+    private Vector3 ease(Vector3 start, Vector3 end, Func<float, float, float, float> easeAction, float value)
+    {
+        var r = new Vector3();
+        r.x = easeAction(start.x, end.x, value);
+        r.y = easeAction(start.y, end.y, value);
+        r.z = easeAction(start.z, end.y, value);
+        return r;
+
+    }
 
     #region Easing Curves
 
