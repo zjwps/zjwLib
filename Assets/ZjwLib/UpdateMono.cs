@@ -2,6 +2,35 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
+public class UpdateDriver : IUpdate
+{
+    private List<Action> mNeedUpdateActions;
+    int i;
+    public bool Update()
+    {
+        for (i = 0; i < mNeedUpdateActions.Count; i++)
+        {
+            mNeedUpdateActions[i]();
+        }
+        return false;
+    }
+    public void AddUpdate(Func<bool> UpdateFunc)
+    {
+        bool end = false;
+        Action needAddAction = null;
+        needAddAction = () =>
+         {
+             if (end) return;
+             if (UpdateFunc())
+             {
+                 end = true;
+                 mNeedUpdateActions.Remove(needAddAction);
+             }
+         };
+        if(mNeedUpdateActions==null) mNeedUpdateActions = new List<Action>();
+        mNeedUpdateActions.Add(needAddAction);
+    }
+}
 public class UpdateMono : MonoBehaviour
 {
     void Awake (){
