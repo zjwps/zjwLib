@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-
 public class UpdateDriver : IUpdate
 {
     private List<Action> mNeedUpdateActions;

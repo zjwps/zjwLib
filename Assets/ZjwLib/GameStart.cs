@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using Zjw.Tools.IEnumeratorStep;
+using zjw.Tools.WaitStep;
 
 public class GameStart : MonoBehaviour
 {
@@ -39,7 +39,7 @@ public class GameTools
 {
     private readonly GameMain main;
     private UpdateDriver mUpdateDriver;
-    private StepBehaviour mStepBehaviour;
+    private StepProcess mStepBehaviour;
 
     public GameTools(GameMain main)
     {
@@ -52,7 +52,7 @@ public class GameTools
     {
         mUpdateDriver = new UpdateDriver();
 		main.Update = mUpdateDriver.Update;
-		mStepBehaviour = new StepBehaviour();
+		mStepBehaviour = new StepProcess();
     }
 
     public void AddUpdate(Func<bool> updateAction)
@@ -60,7 +60,7 @@ public class GameTools
 
     }
 	public IEnumerator<Step> StartStep(IEnumerator<Step> iEnumerator){
-		return mStepBehaviour.StartIEnumerator(iEnumerator);
+		return mStepBehaviour.StartStep(iEnumerator);
 	}
 	public void StopStep(){
 
