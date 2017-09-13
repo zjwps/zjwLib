@@ -1,50 +1,125 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
-
-namespace Zjw.Tools.IEnumeratorStep
+namespace zjw.Tools.WaitStep
 {
+    public class StepPool
+    {
+        private static readonly StepPool mInstance = new StepPool();
+        private readonly List<Step> mSteps = new List<Step>();
+        private StepPool()
+        {
+        }
+        public static Step NewStep()
+        {
+            return mInstance.GetNewStep();
+            //new Step();
+        }
+        #region 几个等待step
 
-    public class Step
+        public static Step NewWaitTime(float needWaitTime, bool realTime = true)
+        {
+            var step = NewStep();
+            Func<float> GetTime = () =>
+            {
+                if (realTime) return Time.realtimeSinceStartup;
+                return Time.time;
+            };
+            float startTime = 0;
+            step.SetOnStart(() =>
+            {
+                startTime = GetTime();
+                return false;
+            });
+            step.SetOnUpdate(() =>
+            {
+                return (GetTime() - startTime) > needWaitTime;
+            });
+            return step;
+        }
+        public static Step NewWaitFrame(int frame = 1)
+        {
+            var step = NewStep();
+            step.SetOnUpdate(() =>
+            {
+                frame--;
+                return frame <= 0;
+            });
+            return step;
+        }
+        #endregion
+        public static void RecoveryStep(Step step)
+        {
+            step.Clear();
+            mInstance.mSteps.Add(step);
+        }
+        public Step GetNewStep()
+        {
+            if (mSteps.Count == 0) return new Step();
+            var item = mSteps[0];
+            mSteps.RemoveAt(0);
+            return item;
+            //new Step();
+        }
+    }
+    public sealed class Step
     {
         private bool mIsCompleted;
         private bool mIsCompletedBefore;
         public bool IsCompleted { get { return mIsCompleted; } }
 
-        protected bool mIsNeedUpdate;
+        private bool mIsNeedUpdate;
         public bool IsNeedUpdate { get { return mIsNeedUpdate; } }
-        public Func<bool> OnStartAction;
-        public Func<bool> OnUpdateAction;
-        public Action OnCompletedAction;
+        private Func<bool> OnStartFunc;
+        private Func<bool> OnUpdateFunc;
+        private Action OnCompletedAction;
         public bool Start()
         {
-            //Debug.Log("start111");
             mIsCompletedBefore = mIsCompleted = false;
-            if (OnStartAction != null)
+            if (OnStartFunc != null)
             {
-                mIsCompleted = OnStartAction() || mIsCompleted;
+                mIsCompleted = OnStartFunc() || mIsCompleted;
             }
             CheckComplete();
             return mIsCompleted;
         }
-        public void SetUpdate(Func<bool> onUpdateAction)
+
+
+        #region 对外接口
+        public void SetOnStart(Func<bool> onStartFunc)
+        {
+            OnStartFunc = onStartFunc;
+        }
+        public void SetOnUpdate(Func<bool> onUpdateFunc)
         {
             mIsNeedUpdate = true;
-            OnUpdateAction = onUpdateAction;
+            OnUpdateFunc = onUpdateFunc;
         }
-        public void SetOnStart(Func<bool> onStartAction)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="onComplete"></param>
+        public void AddOnComplete(Action onComplete)
         {
-            OnStartAction = onStartAction;
+            OnCompletedAction += onComplete;
         }
+        #endregion
+
         public void Update()
         {
             if (mIsCompleted) return;
-            if (OnUpdateAction != null)
+            if (OnUpdateFunc != null)
             {
-                mIsCompleted = OnUpdateAction();
+                mIsCompleted = OnUpdateFunc();
             }
-            if (mIsCompleted) return;
-            mIsCompleted = OnUpdate();
+        }
+        public void Clear()
+        {
+            mIsCompleted = false;
+            OnUpdateFunc = null;
+            OnStartFunc = null;
+            mIsNeedUpdate = false;
+            OnCompletedAction = null;
         }
         private void CheckComplete()
         {
@@ -57,79 +132,24 @@ namespace Zjw.Tools.IEnumeratorStep
                 }
             }
         }
-        protected void Complete()
+        public void Complete()
         {
             mIsCompleted = true;
             CheckComplete();
         }
-        protected void OnComplete()
+        private void OnComplete()
         {
-            //Debug.Log("OnComplete1 OnComplete OnComplete");
             if (OnCompletedAction != null) OnCompletedAction();
-            OnCompletedAction = null;
-        }
-
-    }
-    public static class IEnumeratorStepEx
-    {
-
-    }
-    public sealed class StepFactory
-    {
-        private static StepFactory mInstance = new StepFactory();
-        //缓存step
-        private readonly List<Step> mSteps = new List<Step>();
-        private StepFactory()
-        {
-
-        }
-        public static void RecoveryStep(Step step){
-            Debug.LogError("todo");
-        }
-        public static Step NewWaitFrame(int frame){
-            var step = NewWaitStep();
-            step.SetUpdate(()=>{
-                
-                frame--;
-                return frame<=0;
-            });
-            return step;
-        }
-        public static Step NewWaitTime(float time, bool realTime = true)
-        {
-            var step = NewWaitStep();
-            var mStartTime = 0f;
-            Func<float> GetTime = () =>
-            {
-                if (realTime) return Time.realtimeSinceStartup;
-                return Time.time;
-            };
-            step.SetOnStart(() => { mStartTime = GetTime(); return false; });
-            step.SetUpdate(() =>
-            {
-                return (GetTime() - mStartTime) >= time;
-            });
-            return step;
-        }
-        public static Step NewWaitStep()
-        {
-            if (mInstance.mSteps.Count > 0)
-            {
-                var item = mInstance.mSteps[0];
-                mInstance.mSteps.RemoveAt(0);
-                return item;
-            }
-            return new Step();
+            Clear();
         }
     }
-    public class StepBehaviour
+    public class StepProcess
     {
-        
         private List<IEnumerator<Step>> mNeedUpdateSteps;
+
         int i;
         IEnumerator<Step> mIEnumerator;
         public bool IsCompleted = false;
-
         public bool Update()
         {
             if (mNeedUpdateSteps == null) return IsCompleted;
@@ -147,16 +167,17 @@ namespace Zjw.Tools.IEnumeratorStep
             }
             return IsCompleted;
         }
-        public IEnumerator<Step> StartIEnumerator(IEnumerator<Step> iEnumerator)
+        public IEnumerator<Step> StartStep(IEnumerator<Step> iEnumerator)
         {
             if (iEnumerator == null) return iEnumerator;
             if (!iEnumerator.MoveNext()) return iEnumerator;
             StartOneStep(iEnumerator);
             return iEnumerator;
         }
-        public void StopIEnumerator(IEnumerator<Step> iEnumerator)
+        public void StopStep(IEnumerator<Step> iEnumerator)
         {
             if (iEnumerator == null) return;
+            if (iEnumerator.Current == null) return;
             if (iEnumerator.Current.IsNeedUpdate)
             {
                 mNeedUpdateSteps.Remove(iEnumerator);
@@ -178,18 +199,28 @@ namespace Zjw.Tools.IEnumeratorStep
             }
             else
             {
-                iEnumerator.Current.OnCompletedAction = () =>
+                iEnumerator.Current.AddOnComplete(() =>
                 {
                     TryStepNext(iEnumerator);
-                };
+                });
             }
 
         }
         private void TryStepNext(IEnumerator<Step> iEnumerator)
         {
+            var step = iEnumerator.Current;
+
             if (iEnumerator.MoveNext())
             {
                 StartOneStep(iEnumerator);
+            }
+            else
+            {
+                //没有下一步了完了.
+            }
+            if (step != null)
+            {
+                StepPool.RecoveryStep(step);
             }
         }
     }
