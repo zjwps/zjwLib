@@ -22,9 +22,8 @@ namespace Zjw.Tools.IEnumeratorStep
             mIsCompletedBefore = mIsCompleted = false;
             if (OnStartAction != null)
             {
-                mIsCompleted = OnStartAction();
+                mIsCompleted = OnStartAction() || mIsCompleted;
             }
-            mIsCompleted = OnStart();
             CheckComplete();
             return mIsCompleted;
         }
@@ -68,15 +67,6 @@ namespace Zjw.Tools.IEnumeratorStep
             //Debug.Log("OnComplete1 OnComplete OnComplete");
             if (OnCompletedAction != null) OnCompletedAction();
             OnCompletedAction = null;
-        }
-
-        protected virtual bool OnUpdate()
-        {
-            return false;
-        }
-        protected virtual bool OnStart()
-        {
-            return false;
         }
 
     }
