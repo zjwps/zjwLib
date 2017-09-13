@@ -27,7 +27,7 @@ public class GameStart : MonoBehaviour
 public class GameMain
 {
     public  Func<bool> Update;
-    private GameTools GameTools;
+    public GameTools GameTools;
 
     public GameMain()
     {
