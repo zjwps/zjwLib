@@ -6,7 +6,7 @@ public static class FuncEx{
         return x=>y=>func(x,y);
     }
 }
-
+#if NET_4_6
 public class AwaitStep :INotifyCompletion
 {
     public event Action OnStartAction;
@@ -31,3 +31,4 @@ public class AwaitStep :INotifyCompletion
     public void GetResult() { }
     public AwaitStep GetAwaiter() => this;
 }
+#endif
