@@ -2,10 +2,6 @@ using System;
 using System.Collections.Generic;
 public class EventDispatcher
 {
-    public class EventData{
-        public object Dispatcher;
-        public string EventName;
-    }
     private Dictionary<Type,List<Delegate>> listenerMap;
     public void DisPatchEvent<T>(T data){
         var type = typeof(T);
