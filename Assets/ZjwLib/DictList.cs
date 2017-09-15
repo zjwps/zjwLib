@@ -16,6 +16,9 @@ public class DictList<KeyType, ValueType>
         mDictionary.Clear();
         mList.Clear();
     }
+    public bool ContainsKey(KeyType key){
+        return mDictionary.ContainsKey(key);
+    }
     public ValueType GetItemAt(int index)
     {
         return mList[index];
