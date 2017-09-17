@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 public class DictList<KeyType, ValueType>
 {
@@ -11,6 +12,13 @@ public class DictList<KeyType, ValueType>
         mList.Add(value);
         return value;
     }
+    public void For(Action<ValueType> action)
+    {
+        for (int i = 0; i < mList.Count; i++)
+        {
+            action(mList[i]);
+        }
+    }
     public void Clear()
     {
         mDictionary.Clear();
@@ -22,6 +30,10 @@ public class DictList<KeyType, ValueType>
     public ValueType GetItemAt(int index)
     {
         return mList[index];
+    }
+    public ValueType GetItem(KeyType key)
+    {
+        return mDictionary[key];
     }
     public ValueType Remove(KeyType key)
     {

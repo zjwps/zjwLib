@@ -4,4 +4,7 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: "Assets/Game/\u6EDA\u7403/\u573A\u666F/\u6EDA\u7403Step.unity"
+    guid: 16919210d74187d4ead77c8809c1a01e
