@@ -40,6 +40,7 @@ public class DictList<KeyType, ValueType>
         ValueType value;
         var have = mDictionary.TryGetValue(key, out value);
         if (!have) return value;
+        mDictionary.Remove(key);
         mList.Remove(value);
         return value;
     }
