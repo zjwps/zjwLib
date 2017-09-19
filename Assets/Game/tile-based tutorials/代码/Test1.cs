@@ -1,4 +1,6 @@
 ﻿using UnityEngine;
+using UnityEngine.Events;
+using UnityEngine.U2D;
 
 namespace TileBaseGame
 {
@@ -8,6 +10,8 @@ namespace TileBaseGame
     /// </summary>
     public class Test1 : MonoBehaviour
     {
+        public UnityEvent unity事件;
+        public SpriteAtlas atlas;
         private Game game;
         private void Start()
         {
