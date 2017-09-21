@@ -62,7 +62,7 @@ namespace BtNode
             //}
             return (T)_dataList[dataId];
         }
-        
+
         public void SetData<T>(string dataName, T data)
         {
             int dataId = GetDataId(dataName);
@@ -146,37 +146,38 @@ namespace BtNode
         public void Start(Data data = null)
         {
             if (_started) return;
-            if(data!=null)Data = data;
+            if (data != null) Data = data;
             _started = true;
-            if(Name=="")Name = this.GetType().Name;
+            if (Name == "") Name = this.GetType().Name;
             OnStart();
         }
 
         public virtual void OnStart()
         {
 
-        } 
+        }
 
-        public  Result Update(float deltaTime)
+        public Result Update(float deltaTime)
         {
             if (_end) return Result.End;
             if (!_started) return Result.NoRun;
             var r = OnUpdate(deltaTime);
 
-            r = ResultHandel(r);
+            ResultHandel(r);
             if (r == Result.Succ) _end = true;
             return r;
         }
         private Result ResultHandel(Result r)
         {
-            if(r == Result.Succ)
+            if (r == Result.Succ)
             {
                 if (SuccNode != null) StartChildNode(SuccNode);
-            }else if (r == Result.Fail)
+            }
+            else if (r == Result.Fail)
             {
                 if (FailNode != null) StartChildNode(FailNode);
             }
-            r = OnResult(r);
+            OnResult(r);
             return r;
         }
         public Node AddSuccNode(Node node)
@@ -214,7 +215,7 @@ namespace BtNode
             return Result.Run;
         }
     }
-   
+
 
     /// <summary>
     /// tree节点，方便控制
@@ -240,8 +241,8 @@ namespace BtNode
         public override Result OnUpdate(float deltaTime)
         {
             if (_stop) return Result.Succ;
-            if (_tree!=null)
-            _tree.Update(deltaTime);
+            if (_tree != null)
+                _tree.Update(deltaTime);
             if (!_tree.NeedUpdate) return Result.Succ;
             return base.OnUpdate(deltaTime);
         }
@@ -256,7 +257,7 @@ namespace BtNode
     public class CompositeNode : Node
     {
         private List<Node> _childs;
-        
+
         public List<Node> Childs
         {
             get
@@ -289,7 +290,7 @@ namespace BtNode
     /// <summary>
     /// 选择执行的节点,如果其中一个成功，就选这个来执行。
     /// </summary>
-    public class SectorNode: CompositeNode
+    public class SectorNode : CompositeNode
     {
         public Node ResultNode;
         public Node Curr;
@@ -316,13 +317,13 @@ namespace BtNode
         }
 
     }
-    
-    
+
+
     /// <summary>
     /// 序列执行的节点
     /// ,子节点有一个失败了就销毁整个。
     /// </summary>
-    public class SequenceNode: CompositeNode
+    public class SequenceNode : CompositeNode
     {
         /// <summary>
         /// 当前运行的节点
@@ -337,7 +338,7 @@ namespace BtNode
                 Curr.Start(Data);
             }
             var r = Curr.Update(deltaTime);
-            if(r == Result.Fail)
+            if (r == Result.Fail)
             {
                 Childs.Remove(Curr);
                 Curr = null;
@@ -349,10 +350,10 @@ namespace BtNode
                 Curr = null;
             }
             return base.OnUpdate(deltaTime);
-            
+
         }
     }
-    
+
     /// <summary>
     /// 执行一个方法的node
     /// </summary>
@@ -360,8 +361,8 @@ namespace BtNode
     {
         private Action<Node> _action;
         private bool autoEnd;
-        
-        public FuncionNode(Action<Node> action,bool autoEnd = true)
+
+        public FuncionNode(Action<Node> action, bool autoEnd = true)
         {
             _action = action;
             this.autoEnd = autoEnd;
@@ -372,7 +373,7 @@ namespace BtNode
         }
         public override Result OnUpdate(float deltaTime)
         {
-            if(autoEnd)
+            if (autoEnd)
             {
                 return Result.Succ;
             }
@@ -382,14 +383,14 @@ namespace BtNode
     /// <summary>
     /// 执行一个方法，返回true就 返回 Result.Succ
     /// </summary>
-    public class FuncNode : Node
+    public class JudgeNode : Node
     {
-        private Func<Node,bool> _judgeFunc;
+        private Func<Node, bool> _judgeFunc;
         public override void OnStart()
         {
             //Name = _judgeFunc.GetType().
         }
-        public FuncNode(Func<Node,bool> judgeFunc)
+        public JudgeNode(Func<Node, bool> judgeFunc)
         {
             _judgeFunc = judgeFunc;
         }
@@ -405,17 +406,37 @@ namespace BtNode
             //return base.OnUpdate(deltaTime);
         }
     }
+    public class UpdateAcionNode : Node
+    {
+        private Func<Func<bool>> mBuildAction;
+        private Func<bool> mRunAction;
+        public UpdateAcionNode(Func<Func<bool>> buildAction)
+        {
+            mBuildAction = buildAction;
+        }
+        public override void OnStart()
+        {
+            mRunAction = mBuildAction();
+        }
+        public override Result OnUpdate(float deltaTime)
+        {
+            if (mRunAction == null) return Result.Fail;
+            if (mRunAction()) return Result.Succ;
+            return Result.Run;
+        }
+
+    }
 
     public class Btree
     {
         public List<Node> nodes = new List<Node>();
         public bool NeedUpdate = false;
-        private uint _nodeIndex=0;
+        private uint _nodeIndex = 0;
 
 
         public Btree()
         {
-           
+
 
         }
         public void Update(float deltaTime)
@@ -425,7 +446,7 @@ namespace BtNode
                 var t = nodes[i];
                 var r = t.Update(deltaTime);
                 //如果成功，失败，完成 都移除。
-                if(r != Result.Run)
+                if (r != Result.Run)
                 {
                     nodes.Remove(t);
                     if (nodes.Count == 0) NeedUpdate = false;
@@ -441,7 +462,7 @@ namespace BtNode
         /// 添加一个节点
         /// </summary>
         /// <param name="node"></param>
-        public void AddNode(Node node,bool autoStart = true)
+        public void AddNode(Node node, bool autoStart = true)
         {
             if (node == null)
             {
@@ -452,8 +473,8 @@ namespace BtNode
             node.Tree = this;
             nodes.Add(node);
             node.Id = _nodeIndex;
-            if(autoStart)
-            node.Start();
+            if (autoStart)
+                node.Start();
             NeedUpdate = true;
         }
         /// <summary>
@@ -469,7 +490,7 @@ namespace BtNode
         /// </summary>
         /// <param name="nodes"></param>
         /// <returns></returns>
-        public static SequenceNode BuildSequenceNode( params Node[] nodes)
+        public static SequenceNode BuildSequenceNode(params Node[] nodes)
         {
             var r = new SequenceNode();
             var list = r.Childs = new List<Node>();
@@ -478,6 +499,28 @@ namespace BtNode
                 list.Add(nodes[i]);
             }
             return r;
+        }
+    }
+    public static class BtreeEx
+    {
+        public static Node AddSuccNode(this Node node, Func<Node, bool> needUpdatefunc)
+        {
+            var t = new JudgeNode(needUpdatefunc);
+            node.AddSuccNode(t);
+            return t;
+        }
+
+        public static Node AddSuccNode(this Node node, Func<Func<bool>> buildUpdatefunc)
+        {
+            var t = new UpdateAcionNode(buildUpdatefunc);
+            node.AddSuccNode(t);
+            return t;
+        }
+        public static Node AddSuccNode(this Node node, Action<Node> runAction)
+        {
+            var t = new FuncionNode(runAction);
+            node.AddSuccNode(t);
+            return t;
         }
     }
 }
