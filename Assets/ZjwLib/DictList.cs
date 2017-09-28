@@ -35,6 +35,11 @@ public class DictList<KeyType, ValueType>
     {
         return mDictionary[key];
     }
+    public ValueType TryGetItem(KeyType key)
+    {
+        if (!mDictionary.ContainsKey(key)) return default(ValueType);
+        return mDictionary[key];
+    }
     public ValueType Remove(KeyType key)
     {
         ValueType value;
