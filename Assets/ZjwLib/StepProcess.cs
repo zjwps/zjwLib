@@ -4,6 +4,47 @@ using UnityEngine;
 
 namespace zjw.Tools.WaitStep
 {
+    public class TestStepProcess : StepProcess
+    {
+        public void Test1()
+        {
+            StartStep(Fn1());
+        }
+        private IEnumerator<Step> Fn1()
+        {
+            yield return this.NewWaitFrame(1);
+            Debug.Log("Fn1 1:" + Time.time);
+            yield return this.NewStartStep(Fn2());
+            Debug.Log("Fn1 2:" + Time.time);
+            yield return this.NewWaitFrame(1);
+            Debug.Log("Fn1End:" + Time.time);
+
+        }
+        private IEnumerator<Step> Fn2()
+        {
+            yield return this.NewWaitTime(0.2f);
+            Debug.Log("Fn2: end" + Time.time);
+        }
+    }
+    public static class StepProcessEx
+    {
+        public static Step NewStep(this StepProcess stepProcess)
+        {
+            return StepPool.NewStep();
+        }
+        public static Step NewWaitTime(this StepProcess stepProcess, float needWaitTime, bool realTime = true)
+        {
+            return StepPool.NewWaitTime(needWaitTime, realTime);
+        }
+        public static Step NewWaitFrame(this StepProcess stepProcess, int frame)
+        {
+            return StepPool.NewWaitFrame(frame);
+        }
+        public static Step NewStartStep(this StepProcess stepProcess, IEnumerator<Step> iEnumerator)
+        {
+            return StepPool.NewStartStep(iEnumerator);
+        }
+    }
     public class StepPool
     {
         private static readonly StepPool mInstance = new StepPool();
@@ -15,6 +56,28 @@ namespace zjw.Tools.WaitStep
         {
             return mInstance.GetNewStep();
             //new Step();
+        }
+        public static Step NewStartStep(IEnumerator<Step> iEnumerator)
+        {
+            var step = NewStep();
+            StepProcess stepProcess = null;
+            step.SetOnStart(() =>
+            {
+                stepProcess = new StepProcess();
+                stepProcess.StartStep(iEnumerator);
+                return false;
+            });
+            step.SetOnUpdate(() =>
+            {
+                if (stepProcess == null) return true;
+                if (stepProcess.Update())
+                {
+                    stepProcess = null;
+                    return true;
+                }
+                return false;
+            });
+            return step;
         }
         #region 几个等待step
 
@@ -159,10 +222,24 @@ namespace zjw.Tools.WaitStep
                 mIEnumerator = mNeedUpdateSteps[i];
                 if (mIEnumerator.Current.IsCompleted)
                 {
-                    mNeedUpdateSteps.Remove(mIEnumerator);
-                    i--;
-                    TryStepNext(mIEnumerator);
-                    continue;
+                    var end = TryStepNext(mIEnumerator);
+
+                    if (end)
+                    {
+                        mNeedUpdateSteps.Remove(mIEnumerator);
+                        i--;
+                        if (mNeedUpdateSteps.Count == 0)
+                        {
+                            mNeedUpdateSteps = null;
+                            IsCompleted = true;
+                            break;
+                        }
+                        else
+                        {
+                            continue;
+                        }
+                    }
+
                 }
                 mIEnumerator.Current.Update();
             }
@@ -207,22 +284,30 @@ namespace zjw.Tools.WaitStep
             }
 
         }
-        private void TryStepNext(IEnumerator<Step> iEnumerator)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="iEnumerator"></param>
+        /// <returns> end</returns>
+        private bool TryStepNext(IEnumerator<Step> iEnumerator)
         {
             var step = iEnumerator.Current;
-
-            if (iEnumerator.MoveNext())
-            {
-                StartOneStep(iEnumerator);
-            }
-            else
-            {
-                //没有下一步了完了.
-            }
             if (step != null)
             {
                 StepPool.RecoveryStep(step);
+                step = null;
             }
+            if (iEnumerator.MoveNext())
+            {
+                StartOneStep(iEnumerator);
+                return false;
+            }
+            else
+            {
+                return true;
+                //没有下一步了完了.
+            }
+
         }
     }
 }
