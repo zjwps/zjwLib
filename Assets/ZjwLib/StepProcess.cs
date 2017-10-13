@@ -40,6 +40,11 @@ namespace zjw.Tools.WaitStep
         {
             return StepPool.NewWaitFrame(frame);
         }
+        public static Step NewWaitStep(this StepProcess stepProcess, Func<bool> waitFn)
+        {
+            return StepPool.NewWaitStep(waitFn);
+
+        }
         public static Step NewStartStep(this StepProcess stepProcess, IEnumerator<Step> iEnumerator)
         {
             return StepPool.NewStartStep(iEnumerator);
@@ -57,6 +62,13 @@ namespace zjw.Tools.WaitStep
             return mInstance.GetNewStep();
             //new Step();
         }
+        /// <summary>
+        /// /// <summary>
+        /// TODO 为嵌套NewStartStep的缓存下 StepProcess
+        /// </summary>
+        /// </summary>
+        /// <param name="iEnumerator"></param>
+        /// <returns></returns>
         public static Step NewStartStep(IEnumerator<Step> iEnumerator)
         {
             var step = NewStep();
@@ -76,6 +88,20 @@ namespace zjw.Tools.WaitStep
                     return true;
                 }
                 return false;
+            });
+            return step;
+        }
+
+        public static Step NewWaitStep(Func<bool> waitFn)
+        {
+            var step = NewStep();
+            var end = false;
+            if (waitFn == null) end = true;
+            step.SetOnUpdate(() =>
+            {
+                if (end) return true;
+                end = waitFn();
+                return end;
             });
             return step;
         }
