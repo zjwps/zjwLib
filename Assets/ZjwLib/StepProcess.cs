@@ -6,9 +6,45 @@ namespace zjw.Tools.WaitStep
 {
     public class TestStepProcess : StepProcess
     {
+        private bool wait;
+
         public void Test1()
         {
             StartStep(Fn1());
+            //StartStep(TestWait());
+            StartStep(Steps());
+            //StartStep(WaitTest1());
+
+        }
+        private IEnumerator<Step> WaitTest1()
+        {
+            var needWait = true;
+            yield return this.NewWaitStep(() =>
+            {
+                Debug.Log("needWait---");
+                return !needWait;
+            });
+            Debug.Log("WaitTest1 succ:" + Time.time);
+
+        }
+        private IEnumerator<Step> Steps()
+        {
+            wait = true;
+            yield return this.NewWaitFrame(60);
+            //Debug.Log("NewWaitTime end:" + Time.time);
+            Debug.Log("NewWaitFrame end:" + Time.time);
+            yield return this.NewStartStep(TestWait());
+        }
+        private IEnumerator<Step> TestWait()
+        {
+            Debug.Log("TestWait start:" + Time.time);
+            yield return this.NewWaitStep(() =>
+            {
+                Debug.Log("wait---");
+                return !wait;
+            });
+            Debug.Log("TestWait end:" + Time.time);
+
         }
         private IEnumerator<Step> Fn1()
         {
@@ -19,10 +55,13 @@ namespace zjw.Tools.WaitStep
             yield return this.NewWaitFrame(1);
             Debug.Log("Fn1End:" + Time.time);
 
+            wait = false;
+            Debug.Log(" wait=false");
+
         }
         private IEnumerator<Step> Fn2()
         {
-            yield return this.NewWaitTime(0.2f);
+            yield return this.NewWaitTime(.2f);
             Debug.Log("Fn2: end" + Time.time);
         }
     }
@@ -163,6 +202,10 @@ namespace zjw.Tools.WaitStep
         private Func<bool> OnStartFunc;
         private Func<bool> OnUpdateFunc;
         private Action OnCompletedAction;
+        /// <summary>
+        /// 返回是否结束
+        /// </summary>
+        /// <returns></returns>
         public bool Start()
         {
             mIsCompletedBefore = mIsCompleted = false;
@@ -233,16 +276,139 @@ namespace zjw.Tools.WaitStep
             Clear();
         }
     }
+    /// <summary>
+    /// 一组 就是一次StartStep的所有步骤
+    /// </summary>
+    public class StepGroup
+    {
+        private Step curr;
+
+        public bool End { get; private set; }
+        public bool IsNeedUpdate { get; private set; }
+        //public Step Curr;
+        public IEnumerator<Step> IEnumerator { get; private set; }
+
+        public StepGroup(IEnumerator<Step> iEnumerator)
+        {
+            IEnumerator = iEnumerator;
+            End = false;
+        }
+        /// <summary>
+        /// 执行
+        /// </summary>
+        /// <returns>是否结束</returns>
+        public bool Run()
+        {
+            if (End) return true;
+
+            curr = IEnumerator.Current;
+            var stepEnd = curr.Start();
+            if (stepEnd)
+            {
+                TryStepNext();
+                if (!End)
+                    return Run();
+            }
+
+            if (curr.IsNeedUpdate)
+            {
+                IsNeedUpdate = true;
+            }
+            return false;
+        }
+        private void TryStepNext()
+        {
+            if (curr != null) StepPool.RecoveryStep(curr);
+            curr = null;
+            if (!IEnumerator.MoveNext())
+            {
+                //如果没有下一步了,结束
+                End = true;
+                return;
+            }
+            Run();
+        }
+        public void Update()
+        {
+            if (curr.IsCompleted)
+            {
+                IsNeedUpdate = false;
+                TryStepNext();
+                return;
+            }
+            curr.Update();
+        }
+
+    }
     public class StepProcess
     {
-        private List<IEnumerator<Step>> mNeedUpdateSteps;
+        private DictList<IEnumerator<Step>, StepGroup> mStepGroups;
+        int i;
+        StepGroup mStepGroup;
+        public bool Update()
+        {
+            for (i = 0; i < mStepGroups.Count; i++)
+            {
+                mStepGroup = mStepGroups.GetItemAt(i);
+                if (mStepGroup.End)
+                {
+                    mStepGroups.RemoveAt(i);
+                    i--;
+                    continue;
+                }
+                if (mStepGroup.IsNeedUpdate)
+                {
+                    mStepGroup.Update();
 
+                    if (mStepGroup.End)
+                    {
+                        mStepGroups.RemoveAt(i);
+                        i--;
+                        continue;
+                    }
+                }
+            }
+            return mStepGroups == null || mStepGroups.Count == 0;
+        }
+        public IEnumerator<Step> StartStep(IEnumerator<Step> iEnumerator)
+        {
+            if (iEnumerator == null) return iEnumerator;
+            if (!iEnumerator.MoveNext())
+            {
+                return iEnumerator;
+            }
+            if (mStepGroups == null) mStepGroups = new DictList<IEnumerator<Step>, StepGroup>();
+            var newGroup = new StepGroup(iEnumerator);
+            if (!newGroup.Run())
+            {
+                mStepGroups.Add(iEnumerator, newGroup);
+            }
+            return iEnumerator;
+        }
+        public void StopStep(IEnumerator<Step> iEnumerator)
+        {
+            if (iEnumerator == null) return;
+            if (mStepGroups == null) return;
+            if (!mStepGroups.ContainsKey(iEnumerator)) return;
+            mStepGroups.Remove(iEnumerator);
+            iEnumerator.Dispose();
+            //if(iEnumerator)
+        }
+
+
+
+    }
+    public class StepProcessOld
+    {
+        private List<IEnumerator<Step>> mNeedUpdateSteps;
+        private bool mWaitNext = false;
         int i;
         IEnumerator<Step> mIEnumerator;
         public bool IsCompleted = false;
         public bool Update()
         {
-            if (mNeedUpdateSteps == null) return IsCompleted;
+            if (mWaitNext) return true;
+            if (mNeedUpdateSteps == null) return true;
             for (i = 0; i < mNeedUpdateSteps.Count; i++)
             {
                 mIEnumerator = mNeedUpdateSteps[i];
@@ -274,7 +440,14 @@ namespace zjw.Tools.WaitStep
         public IEnumerator<Step> StartStep(IEnumerator<Step> iEnumerator)
         {
             if (iEnumerator == null) return iEnumerator;
-            if (!iEnumerator.MoveNext()) return iEnumerator;
+            // if(iEnumerator.Current != null){
+            //     Debug.LogError("wrong");
+            //     return null;
+            // }
+            if (!iEnumerator.MoveNext())
+            {
+                return iEnumerator;
+            }
             StartOneStep(iEnumerator);
             return iEnumerator;
         }
@@ -293,9 +466,12 @@ namespace zjw.Tools.WaitStep
         {
             if (iEnumerator.Current.Start())
             {
+                //如果结束下一步
                 TryStepNext(iEnumerator);
                 return;
             }
+            //如果还没有结束
+            //如果需要update驱动
             if (iEnumerator.Current.IsNeedUpdate)
             {
                 if (mNeedUpdateSteps == null) mNeedUpdateSteps = new List<IEnumerator<Step>>();
@@ -303,8 +479,10 @@ namespace zjw.Tools.WaitStep
             }
             else
             {
+                mWaitNext = true;
                 iEnumerator.Current.AddOnComplete(() =>
                 {
+                    mWaitNext = false;
                     TryStepNext(iEnumerator);
                 });
             }
@@ -330,6 +508,7 @@ namespace zjw.Tools.WaitStep
             }
             else
             {
+                mWaitNext = false;
                 return true;
                 //没有下一步了完了.
             }

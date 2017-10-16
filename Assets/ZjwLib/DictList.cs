@@ -41,12 +41,21 @@ public class DictList<KeyType, ValueType>
     }
     public ValueType GetItem(KeyType key)
     {
+        if (!mDictionary.ContainsKey(key))
+        {
+            UnityEngine.Debug.LogError(key);
+        }
         return mDictionary[key];
     }
     public ValueType TryGetItem(KeyType key)
     {
         if (!mDictionary.ContainsKey(key)) return default(ValueType);
         return mDictionary[key];
+    }
+    public void RemoveAt(int index)
+    {
+        var key = GetkeyAt(index);
+        Remove(key);
     }
     public ValueType Remove(KeyType key)
     {
