@@ -256,7 +256,7 @@ namespace ZjwTools
         }
     }
 
-    
+
     /// <summary>
     /// 根据bool值执行成功或失败
     /// </summary>
@@ -534,7 +534,7 @@ namespace ZjwTools
             this.steps = steps;
             //startStep = steps[0];
             Step parentStep = null;
-            for (int i = 0; i < this.steps.Length; i++)
+            for (int i = 0; i < steps.Length; i++)
             {
                 if (startStep == null)
                 {
@@ -640,7 +640,7 @@ namespace ZjwTools
             return step.Then(new ActionBoolStep(runAction));
         }
 
-        public static Step If(this Step step, Func<bool> runAction,out Step runStep)
+        public static Step If(this Step step, Func<bool> runAction, out Step runStep)
         {
             runStep = step.If(runAction);
             return runStep;
@@ -787,8 +787,7 @@ namespace ZjwTools
             running = false;
             if (!started) return;
             if (go == null) return;
-            //go.StopIEnumerator(iEnumerator);
-            go.StopCoroutine(iEnumerator);
+            iEnumerator = go.StopIEnumerator(iEnumerator);
         }
     }
 
@@ -919,11 +918,11 @@ namespace ZjwTools
 
 
         private RpHandle<ValueType> rpHandle;
-        public RpProperty<ValueType> Bind(Action<ValueType> handle,bool run = true)
+        public RpProperty<ValueType> Bind(Action<ValueType> handle, bool run = true)
         {
             RpHandle.Bind(handle);
-            if(run)
-            RpHandle.Run(value);
+            if (run)
+                RpHandle.Run(value);
             return this;
         }
         public void Reset()
@@ -983,7 +982,7 @@ namespace ZjwTools
             if (handles != null)
             {
                 handles.Clear();
-                handles = null;
+                //handles = null;
             }
             handle = null;
         }
@@ -994,7 +993,7 @@ namespace ZjwTools
             {
                 for (int i = 0; i < handles.Count; i++)
                 {
-                    if(handles[i]==null)continue;
+                    if (handles[i] == null) continue;
                     handles[i](value);
                 }
                 return;
@@ -1011,6 +1010,8 @@ namespace ZjwTools
         private RpProperty<T> addItem;
         private RpProperty<T> removeItem;
         private bool binding = false;
+        public int Count { get { return lists.Count; } }
+
         //private Action<T> onAddItem;
         //private Action<T> onRemoveItem;
         public BindList()
@@ -1022,11 +1023,10 @@ namespace ZjwTools
             lists = new List<T>();
             Bind(onAddItem, onRemoveItem);
         }
-
         public void Bind(Action<T> onAddItem, Action<T> onRemoveItem)
         {
-            addItem = Rpdata.AddNewProperty<T>().Bind(onAddItem,false);
-            removeItem = Rpdata.AddNewProperty<T>().Bind(onRemoveItem,false);
+            addItem = Rpdata.AddNewProperty<T>().Bind(onAddItem, false);
+            removeItem = Rpdata.AddNewProperty<T>().Bind(onRemoveItem, false);
             binding = true;
             if (lists.Count > 0)
             {
@@ -1036,7 +1036,11 @@ namespace ZjwTools
                 }
             }
         }
-        public T GetItem(Func<T,bool> match)
+        public T GetItemAt(int index)
+        {
+            return lists[index];
+        }
+        public T GetItem(Func<T, bool> match)
         {
             for (int i = 0; i < lists.Count; i++)
             {
@@ -1047,7 +1051,7 @@ namespace ZjwTools
         }
         public List<T> GetItems(Func<T, bool> match)
         {
-            
+
             List<T> t = null;
             for (int i = 0; i < lists.Count; i++)
             {
@@ -1086,14 +1090,15 @@ namespace ZjwTools
                 removeItem = null;
             }
         }
-        public void RemoveItem(T item){
+        public void RemoveItem(T item)
+        {
             if (removeItem == null) return;
 
             lists.Remove(item);
 
             if (binding)
                 removeItem.Value = item;
-            
+
         }
         public void Add(T item)
         {
@@ -1123,4 +1128,5 @@ namespace ZjwTools
         }
     }
 }
+
 #endregion
