@@ -1049,6 +1049,14 @@ namespace ZjwTools
             }
             return default(T);
         }
+        public void For(Action<T> forFn)
+        {
+            for (int i = 0; i < lists.Count; i++)
+            {
+                var item = lists[i];
+                forFn(item);
+            }
+        }
         public List<T> GetItems(Func<T, bool> match)
         {
 

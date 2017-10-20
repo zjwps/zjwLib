@@ -2,15 +2,29 @@ using System;
 using System.Collections.Generic;
 public class DictList<KeyType, ValueType>
 {
-    private List<ValueType> mList = new List<ValueType>();
+    public class Data
+    {
+        public KeyType key;
+        public ValueType value;
+        public int Index;
+    }
+
+    private List<Data> mList = new List<Data>();
     private List<KeyType> mKeys = new List<KeyType>();
-    private Dictionary<KeyType, ValueType> mDictionary = new Dictionary<KeyType, ValueType>();
+    private Dictionary<KeyType, Data> mDictionary = new Dictionary<KeyType, Data>();
     public int Count { get { return mList.Count; } }
     public ValueType Add(KeyType key, ValueType value)
     {
-        if (mDictionary.ContainsKey(key)) return value;
-        mDictionary.Add(key, value);
-        mList.Add(value);
+        if (mDictionary.ContainsKey(key))
+        {
+            throw new ArgumentOutOfRangeException("已经存在的数据");
+            //return value;
+        }
+        var data = new Data();
+        data.value = value;
+        mDictionary.Add(key, data);
+        mList.Add(data);
+        data.Index = mList.Count - 1;
         mKeys.Add(key);
         return value;
     }
@@ -18,7 +32,7 @@ public class DictList<KeyType, ValueType>
     {
         for (int i = 0; i < mList.Count; i++)
         {
-            action(mList[i]);
+            action(mList[i].value);
         }
     }
     public void Clear()
@@ -33,7 +47,7 @@ public class DictList<KeyType, ValueType>
     }
     public ValueType GetItemAt(int index)
     {
-        return mList[index];
+        return mList[index].value;
     }
     public KeyType GetkeyAt(int index)
     {
@@ -45,12 +59,12 @@ public class DictList<KeyType, ValueType>
         {
             UnityEngine.Debug.LogError(key);
         }
-        return mDictionary[key];
+        return mDictionary[key].value;
     }
     public ValueType TryGetItem(KeyType key)
     {
         if (!mDictionary.ContainsKey(key)) return default(ValueType);
-        return mDictionary[key];
+        return mDictionary[key].value;
     }
     public void RemoveAt(int index)
     {
@@ -59,16 +73,24 @@ public class DictList<KeyType, ValueType>
     }
     public ValueType Remove(KeyType key)
     {
-        ValueType value;
-        var have = mDictionary.TryGetValue(key, out value);
+        var have = mDictionary.ContainsKey(key);
         if (!have)
         {
-            return value;
+            return default(ValueType);
         }
+        var data = mDictionary[key];
         mDictionary.Remove(key);
-        mList.Remove(value);
-        mKeys.Remove(key);
-        return value;
+        var index = data.Index;
+        var start = index + 1;
+        var count = mList.Count;
+        for (int i = start; i < count; i++)
+        {
+            mList[i].Index = i - 1;
+        }
+        mList.RemoveAt(index);
+        mKeys.RemoveAt(index);
+
+        return data.value;
     }
 }
 
