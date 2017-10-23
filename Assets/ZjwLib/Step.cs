@@ -882,9 +882,10 @@ namespace ZjwTools
             {
                 if (EqualityComparer.Equals(this.value, value)) return;
                 //if (this.value == value) return;
+                var oldValue = this.value;
                 this.value = value;
                 if (pauseBind) return;
-                if (rpHandle != null) rpHandle.Run(value);
+                if (rpHandle != null) rpHandle.Run(value, oldValue);
             }
         }
         private EqualityComparer<ValueType> EqualityComparer;
@@ -936,9 +937,33 @@ namespace ZjwTools
     {
         private Action<ValueType> handle;
         private List<Action<ValueType>> handles;
+        private Action<ValueType, ValueType> handle2;
+        private List<Action<ValueType, ValueType>> handles2;
         public void Bind()
         {
 
+        }
+        public void Bind(Action<ValueType, ValueType> handle)
+        {
+            TryBind(handle);
+        }
+        private void TryBind(Action<ValueType, ValueType> handle)
+        {
+            if (handles2 != null)
+            {
+                handles2.Add(handle);
+                return;
+            }
+            if (this.handle2 == null)
+            {
+                this.handle2 = handle;
+                return;
+            }
+            handles2 = new List<Action<ValueType, ValueType>>
+            {
+                this.handle2,
+                handle2
+            };
         }
         public void Bind(Action<ValueType> handle)
         {
@@ -976,6 +1001,20 @@ namespace ZjwTools
             }
             Debug.LogError("不存在的bind？");
         }
+        public void Remove(Action<ValueType, ValueType> handle)
+        {
+            if (handles2 != null)
+            {
+                handles2.Remove(handle);
+                return;
+            }
+            if (this.handle2 == handle)
+            {
+                this.handle2 = null;
+                return;
+            }
+            Debug.LogError("不存在的bind？");
+        }
 
         public void Reset()
         {
@@ -985,9 +1024,19 @@ namespace ZjwTools
                 //handles = null;
             }
             handle = null;
+            if (handles2 != null)
+            {
+                handles2.Clear();
+                //handles = null;
+            }
+            handle2 = null;
         }
 
-        public void Run(ValueType value)
+        public void Run(ValueType value, ValueType oldValue = default(ValueType))
+        {
+            Run1(value);
+        }
+        private void Run1(ValueType value)
         {
             if (handles != null)
             {
