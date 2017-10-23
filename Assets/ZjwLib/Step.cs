@@ -1042,6 +1042,7 @@ namespace ZjwTools
         public void Run(ValueType value, ValueType oldValue = default(ValueType))
         {
             Run1(value);
+            Run2(value, oldValue);
         }
         private void Run1(ValueType value)
         {
@@ -1056,6 +1057,20 @@ namespace ZjwTools
             }
             if (handle == null) return;
             handle(value);
+        }
+        private void Run2(ValueType value, ValueType oldValue)
+        {
+            if (handles2 != null)
+            {
+                for (int i = 0; i < handles2.Count; i++)
+                {
+                    if (handles2[i] == null) continue;
+                    handles2[i](value, oldValue);
+                }
+                return;
+            }
+            if (handle2 == null) return;
+            handle2(value, oldValue);
         }
     }
 
