@@ -926,6 +926,13 @@ namespace ZjwTools
                 RpHandle.Run(value);
             return this;
         }
+        public RpProperty<ValueType> Bind(Action<ValueType, ValueType> handle, bool run = true)
+        {
+            RpHandle.Bind(handle);
+            if (run)
+                RpHandle.Run(value);
+            return this;
+        }
         public void Reset()
         {
             pauseBind = false;
