@@ -753,6 +753,7 @@ namespace ZjwTools
         private IEnumerator iEnumerator;
         private bool started = false;
         private bool running = false;
+        private Coroutine mCoroutine;
         private MonoBehaviour go;
 
         public Handles()
@@ -779,7 +780,7 @@ namespace ZjwTools
             this.go = go;
             iEnumerator = Update();
             running = true;
-            go.StartCoroutine(iEnumerator);
+            mCoroutine = go.StartCoroutine(iEnumerator);
             return this;
         }
         public void Stop()
@@ -787,7 +788,9 @@ namespace ZjwTools
             running = false;
             if (!started) return;
             if (go == null) return;
-            iEnumerator = go.StopIEnumerator(iEnumerator);
+            go.StopCoroutine(mCoroutine);
+            iEnumerator=null;
+            mCoroutine=null;
         }
     }
 
