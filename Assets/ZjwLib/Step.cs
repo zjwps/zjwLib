@@ -256,7 +256,7 @@ namespace ZjwTools
         }
     }
 
-    
+
     /// <summary>
     /// 根据bool值执行成功或失败
     /// </summary>
@@ -640,7 +640,7 @@ namespace ZjwTools
             return step.Then(new ActionBoolStep(runAction));
         }
 
-        public static Step If(this Step step, Func<bool> runAction,out Step runStep)
+        public static Step If(this Step step, Func<bool> runAction, out Step runStep)
         {
             runStep = step.If(runAction);
             return runStep;
@@ -789,8 +789,8 @@ namespace ZjwTools
             if (!started) return;
             if (go == null) return;
             go.StopCoroutine(mCoroutine);
-            iEnumerator=null;
-            mCoroutine=null;
+            iEnumerator = null;
+            mCoroutine = null;
 
         }
     }
@@ -889,7 +889,7 @@ namespace ZjwTools
                 var oldValue = this.value;
                 this.value = value;
                 if (pauseBind) return;
-                if (rpHandle != null) rpHandle.Run(value,oldValue);
+                if (rpHandle != null) rpHandle.Run(value, oldValue);
             }
         }
         private EqualityComparer<ValueType> EqualityComparer;
@@ -923,14 +923,14 @@ namespace ZjwTools
 
 
         private RpHandle<ValueType> rpHandle;
-        public RpProperty<ValueType> Bind(Action<ValueType> handle,bool run = true)
+        public RpProperty<ValueType> Bind(Action<ValueType> handle, bool run = true)
         {
             RpHandle.Bind(handle);
-            if(run)
-            RpHandle.Run(value);
+            if (run)
+                RpHandle.Run(value);
             return this;
         }
-        public RpProperty<ValueType> Bind(Action<ValueType,ValueType> handle, bool run = true)
+        public RpProperty<ValueType> Bind(Action<ValueType, ValueType> handle, bool run = true)
         {
             RpHandle.Bind(handle);
             if (run)
@@ -948,17 +948,17 @@ namespace ZjwTools
     {
         private Action<ValueType> handle;
         private List<Action<ValueType>> handles;
-        private Action<ValueType,ValueType> handle2;
-        private List<Action<ValueType,ValueType>> handles2;
+        private Action<ValueType, ValueType> handle2;
+        private List<Action<ValueType, ValueType>> handles2;
         public void Bind()
         {
 
         }
-        public void Bind(Action<ValueType,ValueType> handle)
+        public void Bind(Action<ValueType, ValueType> handle)
         {
             TryBind(handle);
         }
-        private void TryBind(Action<ValueType,ValueType> handle)
+        private void TryBind(Action<ValueType, ValueType> handle)
         {
             if (handles2 != null)
             {
@@ -970,10 +970,10 @@ namespace ZjwTools
                 this.handle2 = handle;
                 return;
             }
-            handles2 = new List<Action<ValueType,ValueType>>
+            handles2 = new List<Action<ValueType, ValueType>>
             {
                 this.handle2,
-                handle2
+                handle
             };
         }
         public void Bind(Action<ValueType> handle)
@@ -1012,7 +1012,7 @@ namespace ZjwTools
             }
             Debug.LogError("不存在的bind？");
         }
-        public void Remove(Action<ValueType,ValueType> handle)
+        public void Remove(Action<ValueType, ValueType> handle)
         {
             if (handles2 != null)
             {
@@ -1043,12 +1043,13 @@ namespace ZjwTools
             handle2 = null;
         }
 
-        public void Run(ValueType value,ValueType oldValue=default(ValueType))
+        public void Run(ValueType value, ValueType oldValue = default(ValueType))
         {
             Run1(value);
-            Run2(value,oldValue);
+            Run2(value, oldValue);
         }
-        private void Run1(ValueType value){
+        private void Run1(ValueType value)
+        {
             if (handles != null)
             {
                 for (int i = 0; i < handles.Count; i++)
@@ -1061,19 +1062,19 @@ namespace ZjwTools
             if (handle == null) return;
             handle(value);
         }
-        private void Run2(ValueType value,ValueType oldValue)
+        private void Run2(ValueType value, ValueType oldValue)
         {
             if (handles2 != null)
             {
                 for (int i = 0; i < handles2.Count; i++)
                 {
                     if (handles2[i] == null) continue;
-                    handles2[i](value,oldValue);
+                    handles2[i](value, oldValue);
                 }
                 return;
             }
             if (handle2 == null) return;
-            handle2(value,oldValue);
+            handle2(value, oldValue);
         }
     }
 
@@ -1099,8 +1100,8 @@ namespace ZjwTools
         }
         public void Bind(Action<T> onAddItem, Action<T> onRemoveItem)
         {
-            addItem = Rpdata.AddNewProperty<T>().Bind(onAddItem,false);
-            removeItem = Rpdata.AddNewProperty<T>().Bind(onRemoveItem,false);
+            addItem = Rpdata.AddNewProperty<T>().Bind(onAddItem, false);
+            removeItem = Rpdata.AddNewProperty<T>().Bind(onRemoveItem, false);
             binding = true;
             if (lists.Count > 0)
             {
@@ -1114,7 +1115,7 @@ namespace ZjwTools
         {
             return lists[index];
         }
-        public T GetItem(Func<T,bool> match)
+        public T GetItem(Func<T, bool> match)
         {
             for (int i = 0; i < lists.Count; i++)
             {
@@ -1133,7 +1134,7 @@ namespace ZjwTools
         }
         public List<T> GetItems(Func<T, bool> match)
         {
-            
+
             List<T> t = null;
             for (int i = 0; i < lists.Count; i++)
             {
@@ -1172,19 +1173,23 @@ namespace ZjwTools
                 removeItem = null;
             }
         }
-        public void RemoveItem(T item){
+        public void RemoveItem(T item)
+        {
             if (removeItem == null) return;
 
             lists.Remove(item);
 
             if (binding)
                 removeItem.Value = item;
-            
+
         }
-        public void RemoveItems(Func<T,bool> match){
-            for (int i = 0; i < lists.Count; i++){
+        public void RemoveItems(Func<T, bool> match)
+        {
+            for (int i = 0; i < lists.Count; i++)
+            {
                 var item = lists[i];
-                if(match(item)){
+                if (match(item))
+                {
                     RemoveItem(item);
                 }
             }
