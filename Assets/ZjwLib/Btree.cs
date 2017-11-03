@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using System;
 
@@ -426,6 +425,16 @@ namespace BtNode
         }
 
     }
+    /// <summary>
+    /// 占位用的node
+    /// </summary>
+    public class EmptyNode : Node
+    {
+        public override Result OnUpdate(float deltaTime)
+        {
+            return Result.Succ;
+        }
+    }
 
     public class Btree
     {
@@ -503,11 +512,41 @@ namespace BtNode
     }
     public static class BtreeEx
     {
-        public static Node AddSuccNode(this Node node, Func<Node, bool> needUpdatefunc)
+        public static Node BuildNode(Func<Func<bool>> buildUpdatefunc)
         {
-            var t = new JudgeNode(needUpdatefunc);
+            return new UpdateAcionNode(buildUpdatefunc);
+        }
+        public static Node BuildNode(Func<Node, bool> judgefunc)
+        {
+            return new JudgeNode(judgefunc);
+        }
+        public static Node BuildNode(Action<Node> runAction)
+        {
+            return new FuncionNode(runAction);
+        }
+        public static Node AddSuccNode(this Node node, Func<Node, bool> judgefunc)
+        {
+            var t = new JudgeNode(judgefunc);
             node.AddSuccNode(t);
             return t;
+        }
+        public static Node AddSuccNode(this Node node, Func<Node, bool> judgefunc, Node succNode)
+        {
+            var t = new JudgeNode(judgefunc);
+            node.AddSuccNode(t);
+            //SuccNode 只有judge true 才执行的node;
+            var emptyNode = new EmptyNode();
+            t.AddSuccNode(succNode).AddSuccNode(emptyNode);
+            t.AddFailNode(emptyNode);
+            return emptyNode;
+        }
+        public static Node AddSuccNode(this Node node, Func<Node, bool> judgefunc, Func<Func<bool>> buildUpdatefunc)
+        {
+            return AddSuccNode(node, judgefunc, BuildNode(buildUpdatefunc));
+        }
+        public static Node AddSuccNode(this Node node, Func<Node, bool> judgefunc, Action<Node> runAction)
+        {
+            return AddSuccNode(node, judgefunc, new FuncionNode(runAction));
         }
 
         public static Node AddSuccNode(this Node node, Func<Func<bool>> buildUpdatefunc)
