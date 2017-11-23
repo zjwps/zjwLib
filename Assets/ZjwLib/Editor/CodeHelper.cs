@@ -3,10 +3,14 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
-
-public class TestUiHelper : MonoBehaviour {
-    private const string preMenu = "ZjwTest/ui工具";
-    private static GameObject SelectedGameObject;
+/// <summary>
+/// 对象引用代码生成
+/// </summary>
+public class CodeHelper
+{
+    const string tag = "CareUI";
+    // private const string preMenu = "ZjwTest/ui工具";
+    // private static GameObject SelectedGameObject;
     private static List<Type> types;
     public static void InitTypes()
     {
@@ -17,8 +21,28 @@ public class TestUiHelper : MonoBehaviour {
             // ,typeof(UI2DSprite)
             // ,typeof(UILabel)
             // ,typeof(UIGrid)
-            // ,typeof(Transform)
+            // ,typeof(UIToggle)
+            // ,typeof(UILoopTitleGrid)
+            //,
+            typeof(Transform)
         };
+        //这样写如果是不同程序集会有问题
+        // types = new List<Type>()
+        // {
+        //     Type.GetType("UIWindow")
+        //     ,Type.GetType("RewardShowView")
+        //     ,Type.GetType("UI2DSprite")
+        //     ,Type.GetType("UILabel")
+        //     ,Type.GetType("UIGrid")
+        //     ,Type.GetType("UIToggle")
+        //     ,Type.GetType("UILoopTitleGrid")
+        //     ,typeof(Transform)
+        // };
+        for (int i = 0; i < types.Count; i++)
+        {
+            Debug.Log(types[i]);
+
+        }
     }
     [InitializeOnLoadMethod]
     static void StartInitializeOnLoadMethod()
@@ -26,13 +50,14 @@ public class TestUiHelper : MonoBehaviour {
         InitTypes();
         EditorApplication.hierarchyWindowItemOnGUI += OnHierarchyGUI;
     }
-    [MenuItem(preMenu + "/NGUI代码生成")]
-    static void Test2()
+    //[MenuItem(preMenu + "/NGUI代码生成")]
+    static void Test2(GameObject SelectedGameObject)
     {
         //print("Test2");
         var t = SelectedGameObject;
-        var tool = new NGUI代码生成(t);
-        print(tool.Result);
+        if (t == null) return;
+        var tool = new 对象引用代码生成(t);
+        Debug.Log(tool.Result);
         CopyToClipBoard(tool.Result);
     }
     static void CopyToClipBoard(string str)
@@ -42,6 +67,7 @@ public class TestUiHelper : MonoBehaviour {
         te.text = str;
         te.SelectAll();
         te.Copy();
+
     }
     private static void OnHierarchyGUI(int instanceID, Rect selectionRect)
     {
@@ -52,36 +78,45 @@ public class TestUiHelper : MonoBehaviour {
             if (t)
             {
                 Vector2 mousePosition = Event.current.mousePosition;
-                if (t.tag != "CareUI") return;
+                if (t.tag != tag) return;
                 //print(t.name);
-                EditorUtility.DisplayPopupMenu(new Rect(mousePosition.x, mousePosition.y, 0, 0), preMenu, null);
-                SelectedGameObject = t;
+                //EditorUtility.DisplayPopupMenu(new Rect(mousePosition.x, mousePosition.y, 0, 0), preMenu, null);
+                var option = EditorUtility.DisplayDialog(
+                "NGUI代码生成?"
+                , "生成Objs代码并且拷贝到剪贴板"
+                , "确定"
+                , "取消"
+                // ,"Quit without saving"
+                );
+                if (!option) return;
+                // SelectedGameObject = t;
                 Event.current.Use();
+                Test2(t);
             }
         }
-       
+
     }
-    public class NGUI代码生成
+    public class 对象引用代码生成
     {
         public string ClassStringBefore =
-            "   public class UiObjs\n" +
+            "   public class Objs\\n" +
             "   {\n" +
             "       public GameObject MainObj;\n" +
             "       public Transform transform;\n" +
             "";
-        public string ClassStringAfter ="" +
+        public string ClassStringAfter = "" +
             "       }\n" +
             "   }";
         public string CtorStringBefore = "" +
-            "       public UiObjs(GameObject t)\n" +
+            "       public Objs(GameObject t)\n" +
             "       {\n" +
             "           MainObj = t;\n" +
             "           transform = t.transform;\n" +
             "";
-        public string LabelString = 
+        public string LabelString =
             "           ";
 
-        public string Result="";
+        public string Result = "";
         public string 声明字段 = "" +
             "";
         public string 显示对象获取代码 = "";
@@ -90,20 +125,20 @@ public class TestUiHelper : MonoBehaviour {
             "" +
             "";
         public GameObject MainObj;
-     
-        public NGUI代码生成(GameObject t)
+
+        public 对象引用代码生成(GameObject t)
         {
             this.MainObj = t;
-
+            if (MainObj == null) return;
             生成文本();
             组合文本();
         }
         private void 生成文本()
         {
             var t = MainObj.transform;
-           找到关心对象(t, 生成对象的代码);
+            找到关心对象(t, 生成对象的代码);
         }
-        public void 找到关心对象(Transform tran, Func<Transform,string,bool> func, string currPath = "")
+        public void 找到关心对象(Transform tran, Func<Transform, string, bool> func, string currPath = "")
         {
             var goOn = func(tran, currPath);
             var path = currPath;
@@ -112,7 +147,7 @@ public class TestUiHelper : MonoBehaviour {
                 for (int i = 0; i < tran.childCount; i++)
                 {
                     Transform child = tran.GetChild(i);
-                    找到关心对象(child, func, path==""?child.name:path+"/"+child.name);
+                    找到关心对象(child, func, path == "" ? child.name : path + "/" + child.name);
                 }
             }
         }
@@ -124,15 +159,15 @@ public class TestUiHelper : MonoBehaviour {
         private bool 生成对象的代码(Transform t, string currPath = "")
         {
             var goOn = t.gameObject.activeSelf;
-            if (t.tag != "CareUI") return goOn;
+            if (t.tag != tag) return goOn;
             for (int i = 0; i < types.Count; i++)
             {
-                if (Findcomment(types[i],t, CommentWriteCode, currPath)) return goOn;
+                if (Findcomment(types[i], t, CommentWriteCode, currPath)) return goOn;
             }
             return false;
 
         }
-        private bool Findcomment(Type type,Transform tran,
+        private bool Findcomment(Type type, Transform tran,
             Action<string, string, string> action, string currPath = "")
         {
             var path = currPath;
@@ -145,33 +180,35 @@ public class TestUiHelper : MonoBehaviour {
             return false;
 
         }
-        private void CommentWriteCode(string typeName,string name,string currPath)
+        private void CommentWriteCode(string typeName, string name, string currPath)
         {
+            var GetComponentStr = ".GetComponent<{0}>()";
+            if (typeName == "Transform") GetComponentStr = "";
             var t = "       public {0} {1};\n";
-            t = string.Format(t,typeName, name);
+            t = string.Format(t, typeName, name);
             声明字段 += t;
-            
-            if(currPath=="")t = "           {1} = transform.GetComponent<{0}>();\n";
-            else t = "           {1} = transform.Find(\"{2}\").GetComponent<{0}>();\n";
-            t = string.Format(t, typeName, name,currPath);
+
+            if (currPath == "") t = "           {1} = transform" + GetComponentStr + ";\n";
+            else t = "           {1} = transform.Find(\"{2}\")" + GetComponentStr + ";\n";
+            t = string.Format(t, typeName, name, currPath);
             显示对象获取代码 += t;
             //Transform transform=null;
             //transform.Find("");
 
         }
-        private bool Findcomment<T>(Transform tran,Action<string,string,string> action, string currPath = "")
+        private bool Findcomment<T>(Transform tran, Action<string, string, string> action, string currPath = "")
         {
             var path = currPath;
             var comment = tran.GetComponent<T>();
             if (comment != null)
             {
-                action(typeof(T).Name, tran.name,path);
+                action(typeof(T).Name, tran.name, path);
                 return true;
             }
             return false;
 
         }
-        
+
         private void 组合文本()
         {
             Result += ClassStringBefore;
@@ -183,6 +220,6 @@ public class TestUiHelper : MonoBehaviour {
             Result += ClassStringAfter;
         }
     }
-   
+
 
 }
