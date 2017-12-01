@@ -20,7 +20,7 @@ namespace TestTemp.TestFrameWork
             for (int i = 0; i < props.Length; i++)
             {
                 var item  = props[i];
-                var att =  item.GetCustomAttribute(injectType);
+                var att =  item.GetCustomAttributes(injectType,false);
                 if(att==null)continue;
                 Debug.Log("name "+ item.Name);
                 Debug.Log("PropertyType "+ item.PropertyType);
