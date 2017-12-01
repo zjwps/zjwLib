@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 /// <summary>
@@ -19,29 +20,42 @@ public class TestTemplate : MonoBehaviour
     // Update is called once per frame
     public void Update()
     {
+        OnUpdate();
         测试方法.ForEach((x)=>{
 
             if(x.运行){
                 x.运行=false;
-                try
-                {
-                    if(!string.IsNullOrEmpty(x.字符串参数)){
+
+                if(!string.IsNullOrEmpty(x.字符串参数)){
                         this.GetType().GetMethod(x.方法名).Invoke(this, new []{x.字符串参数 });
                     }else{
 
                         this.GetType().GetMethod(x.方法名).Invoke(this, null);
                     }
+                // try
+                // {
+                //     if(!string.IsNullOrEmpty(x.字符串参数)){
+                //         this.GetType().GetMethod(x.方法名).Invoke(this, new []{x.字符串参数 });
+                //     }else{
 
-                }
-                catch (System.Exception e)
-                {
+                //         this.GetType().GetMethod(x.方法名).Invoke(this, null);
+                //     }
 
-                    Debug.Log("err:"+x.方法名+" "+e);
-                }
+                // }
+                // catch (System.Exception e)
+                // {
+
+                //     Debug.Log("err:"+x.方法名+" "+e);
+                // }
             }
         });
         
     }
+
+    protected virtual void OnUpdate()
+    {
+    }
+
     [System.Serializable]
     public class TestData{
         public string 备注;
