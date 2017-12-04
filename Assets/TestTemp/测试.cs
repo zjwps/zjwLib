@@ -9,7 +9,7 @@ public class 测试 : TestTemplate {
 	IEnumerator Start () {
         yield return null;
         print(Time.time);
-        yield return new 异步任务(new 测试异步任务());
+        //yield return new 异步任务(new 测试异步任务());
         print("done!");
         //StartCoroutine()
         yield return StartCoroutine(Test1());
@@ -19,24 +19,31 @@ public class 测试 : TestTemplate {
 		Temp1= 异步();
 	}
 	IEnumerator 异步(){
-		Debug.Log("异步1");
-		yield return 11;
-        Debug.Log("异步2");
-        yield return 22;
-        Debug.Log("异步3");
+		if(Random.Range(1,99)==1){
+			Debug.Log("Random.Range(1,4)==1");
+			yield return 11;
+		}
+		// Debug.Log("异步1之前");
+        // yield return 1;
+		// Debug.Log("异步2之前");
+        // yield return 2;
+		// Debug.Log("异步2结束");
+
+		Debug.Log("异步没有测试?");
     }
     void Test3(){
 		if(Temp1==null) return;
-		Debug.Log("Current1: "+Temp1.Current);
         if (!Temp1.MoveNext())
         {
             Temp1 = null;
-            Debug.Log("end?");
+            Debug.Log("=====异步结束====");
+            return;
         }
-        else
-        {
-            Debug.Log("Temp1.MoveNext() true Current2: " + Temp1.Current);
-        }
+        //else
+        //{
+        //    Debug.Log("Temp1.MoveNext() true Current2: " + (Temp1.Current));
+        //}
+		Debug.Log("=====异步还有?====Temp1.Current==null " + (Temp1.Current==null));
     }
     
 	IEnumerator Test1()
@@ -57,15 +64,9 @@ public class 测试 : TestTemplate {
                 i++;
                 return;
             }
-            Debug.Log("run");
+            // Debug.Log("run");
             Test3();
         }
     }
-    public class 测试异步任务 : 任务
-    {
-        public 测试异步任务()
-        {
-            开始 = () => false;
-        }
-    }
+  
 }

@@ -40,7 +40,7 @@ namespace TileBaseGame
             {
                 for (int j = 0; j < mapWidth; j++)
                 {
-                    var name = "";
+                    // var name = "";
 
                 }
             }
