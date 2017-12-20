@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 using System;
+using System.Collections;
 
 namespace BtNode
 {
@@ -30,8 +31,6 @@ namespace BtNode
         /// </summary>
         private List<object> _dataList = new List<object>();
         private List<string> _dataNames = new List<string>();
-        private int trigerType;
-
         public Data(int int32)
         {
             Int32 = int32;
@@ -57,7 +56,7 @@ namespace BtNode
         {
             //if (BT.BTConfiguration.ENABLE_DATABASE_LOG)
             //{
-            //    Debug.Log("BTDatabase: getting data for " + _dataNames[dataId]);
+            //    //Debug.Log("BTDatabase: getting data for " + _dataNames[dataId]);
             //}
             return (T)_dataList[dataId];
         }
@@ -214,8 +213,53 @@ namespace BtNode
             return Result.Run;
         }
     }
+    /// <summary>
+    /// 简易异步Node,只支持一个异步自动执行,只支持null
+    /// </summary>
+    public class NodeAsnc : Node
+    {
+        public WaitEnumerator mNodeWait;
+        public bool WaitingAsync { get; private set; }
+        public override Result OnUpdate(float deltaTime)
+        {
+            if (mNodeWait != null)
+            {
+                if (mNodeWait.Update())
+                {
+                    mNodeWait = null;
+                    WaitingAsync = false;
+                }
+            }
+            if (WaitingAsync) return Result.Run;
+            return Result.Succ;
+        }
+        public override void OnStart()
+        {
+            WaitingAsync = true;
+            mNodeWait = new WaitEnumerator(AsyncSteps());
+        }
 
-
+        protected virtual IEnumerator AsyncSteps()
+        {
+            //IEnumerator enumerator
+            yield break;
+        }
+        public class WaitEnumerator
+        {
+            private IEnumerator enumerator;
+            public WaitEnumerator(IEnumerator enumerator)
+            {
+                this.enumerator = enumerator;
+            }
+            public bool Update()
+            {
+                if (enumerator == null) return true;
+                if (!enumerator.MoveNext()) return true;
+                if (enumerator.Current == null) return false;
+                return true;
+            }
+        }
+    }
     /// <summary>
     /// tree节点，方便控制
     /// </summary>
