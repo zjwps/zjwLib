@@ -16,7 +16,131 @@ public class TestTemplate : MonoBehaviour
     public void test1(){
         
     }
+    public void 执行静态方法(string str)
+    {
 
+        //限制同一个Assembly
+        if (string.IsNullOrEmpty(str)) return;
+
+
+        var dotStrs = str.Split('.');
+        var paramStrs = new List<string>();
+        var paramStr = "";
+        var fnName = "";
+
+
+        if (dotStrs.Length == 1)
+        {
+            ZLog.Error("格式不对");
+            return;
+        }
+
+
+        {
+            var fnStr = dotStrs[dotStrs.Length - 1];
+            int index = fnStr.IndexOf('(');
+            if (index < 0)
+            {
+                ZLog.Error("格式不对");
+                return;
+            }
+            int last = fnStr.LastIndexOf(')');
+            fnName = fnStr.Substring(0, index).Trim();
+            paramStr = fnStr.Substring(index + 1, last - index - 1);
+        }
+        // 解析方法参数
+        {
+            var paramsList = paramStr.Split(',');
+
+            for (int i = 0; i < paramsList.Length; i++)
+            {
+                bool isSucc = true;
+                var code = paramsList[i].Trim();
+                var param = "";
+                var value = "";
+                {
+                    var arr = code.Split(':');
+
+                    if (arr.Length >= 2)
+                    {
+                        param = arr[0].Trim();
+                        value = arr[1].Trim();
+                    }
+                    else if (arr.Length == 1)
+                    {
+                        value = arr[0].Trim();
+                    }
+                    else
+                    {
+                        isSucc = false;
+                    }
+                }
+                if (isSucc)
+                {
+                    paramStrs.Add(value);
+                }
+                else
+                {
+                    paramStrs.Add(null);
+                }
+            }
+        }
+        {
+            var assembly = this.GetType().Assembly;
+            string typestr = "";
+            for (int i = 0; i < (dotStrs.Length - 1); i++)
+            {
+                typestr += dotStrs[i];
+                if (i != (dotStrs.Length - 2))
+                {
+                    typestr += ".";
+                }
+            }
+            var type = assembly.GetType(typestr);
+            if (type == null)
+            {
+                ZLog.Error("找不到类: ", typestr);
+                return;
+            }
+            else
+            {
+                ZLog.Info("找到类: ", typestr);
+            }
+            //ActorTaskHelp.SetActiveWall
+            var methodInfo = type.GetMethod(fnName);
+            if (methodInfo == null)
+            {
+                ZLog.Error("找不到方法: ", fnName);
+                return;
+            }
+            {
+                var paramList = methodInfo.GetParameters();
+                object[] params1 = new object[paramList.Length];
+
+                for (int i = 0; i < params1.Length; i++)
+                {
+                    var info = paramList[i];
+                    if (info.ParameterType == typeof(bool))
+                    {
+                        params1[i] = bool.Parse(paramStrs[i]);
+                    }
+                    else if (info.ParameterType == typeof(string))
+                    {
+                        params1[i] = paramStrs[i];
+                    }
+                    else if (info.ParameterType == typeof(int))
+                    {
+                        params1[i] = int.Parse(paramStrs[i]);
+                    }
+                    else if (info.ParameterType == typeof(float))
+                    {
+                        params1[i] = float.Parse(paramStrs[i]);
+                    }
+                }
+                methodInfo.Invoke(null, params1);
+            }
+        }
+    }
     // Update is called once per frame
     public void Update()
     {
