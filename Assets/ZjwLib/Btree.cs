@@ -213,6 +213,51 @@ namespace BtNode
             return Result.Run;
         }
     }
+    public class NodeAsncFunc : Node
+    {
+        public WaitEnumerator mNodeWait;
+        private IEnumerator enumerator;
+
+        public NodeAsncFunc(System.Collections.IEnumerator enumerator)
+        {
+            this.enumerator = enumerator;
+        }
+
+        public bool WaitingAsync { get; private set; }
+        public override Result OnUpdate(float deltaTime)
+        {
+            if (mNodeWait != null)
+            {
+                if (mNodeWait.Update())
+                {
+                    mNodeWait = null;
+                    WaitingAsync = false;
+                }
+            }
+            if (WaitingAsync) return Result.Run;
+            return Result.Succ;
+        }
+        public override void OnStart()
+        {
+            WaitingAsync = true;
+            mNodeWait = new WaitEnumerator(enumerator);
+        }
+        public class WaitEnumerator
+        {
+            private IEnumerator enumerator;
+            public WaitEnumerator(IEnumerator enumerator)
+            {
+                this.enumerator = enumerator;
+            }
+            public bool Update()
+            {
+                if (enumerator == null) return true;
+                if (!enumerator.MoveNext()) return true;
+                if (enumerator.Current == null) return false;
+                return true;
+            }
+        }
+    }
     /// <summary>
     /// 简易异步Node,只支持一个异步自动执行,只支持null
     /// </summary>
@@ -260,6 +305,7 @@ namespace BtNode
             }
         }
     }
+
     /// <summary>
     /// tree节点，方便控制
     /// </summary>
@@ -501,7 +547,8 @@ namespace BtNode
                 //如果成功，失败，完成 都移除。
                 if (r != Result.Run)
                 {
-                    nodes.Remove(t);
+                    nodes.RemoveAt(i);
+                    i--;
                     if (nodes.Count == 0) NeedUpdate = false;
                 }
             }
