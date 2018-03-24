@@ -118,13 +118,20 @@ public class Test1 : MonoBehaviour {
 
     // Use this for initialization
     void Start () {
-		 mUpdateDriver = new UpdateDriver();
+		mUpdateDriver = new UpdateDriver();
         mUpdateDriver.AddUpdate(stepTask.Update);
         stepTask = new StepProcess();
 		 
 		 stepTask.StartStep(Fn1());
-		 
 	}
+    void TestA1(){
+        var map = new HashSet<Zjwlib.Entity>();
+        map.Add(new Zjwlib.Entity());
+        // map.UnionWith(new HashSet<int>(){2,3,1});
+        var t1 = new LinkedList<int>();
+        var t2 = new Hashtable();
+        
+    }
 
     private IEnumerator<Step> Fn1()
     {
