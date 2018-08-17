@@ -11,7 +11,7 @@ public class EaseCurves{
         var r = new Vector3();
         r.x = easeAction(start.x, end.x, value);
         r.y = easeAction(start.y, end.y, value);
-        r.z = easeAction(start.z, end.y, value);
+        r.z = easeAction(start.z, end.z, value);
         return r;
 
     }
