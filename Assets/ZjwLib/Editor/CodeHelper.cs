@@ -44,7 +44,7 @@ public class CodeHelper
 
         }
     }
-    [InitializeOnLoadMethod]
+    //[InitializeOnLoadMethod]
     static void StartInitializeOnLoadMethod()
     {
         InitTypes();
