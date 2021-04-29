@@ -53,9 +53,13 @@ public class AwaitTools
     private List<AwaitFrame> waits = new List<AwaitFrame>();
     private List<AwaitFrame> waitTemps = new List<AwaitFrame>();
     private List<AwaitFrame> waitPool = new List<AwaitFrame>();
-
+    protected List<AwaitTools> childs = new List<AwaitTools>();
     public void Update()
     {
+        for (int j = 0; j < childs.Count; j++)
+        {
+            childs[j].Update();
+        }
         if (waitTemps.Count > 0)
         {
             for (int i = 0; i < waitTemps.Count; i++)
@@ -96,6 +100,14 @@ public class AwaitTools
 
         }
     }
+    public async Task WaitLoop(Action action)
+    {
+        while (true)
+        {
+            await WaitFrame();
+            action();
+        }
+    }
     public async Task WaitFrame()
     {
         AwaitFrame t = null;
@@ -111,6 +123,23 @@ public class AwaitTools
         waits.Add(t);
         await t;
     }
+
+
+    public AwaitTools AddNewWaitChild(AwaitTools child)
+    {
+        //var t = new AwaitTools();
+        childs.Add(child);
+        return child;
+    }
+    public bool RemoveWaitChild(AwaitTools child)
+    {
+       return childs.Remove(child);
+    }
+    public void ClearChild()
+    {
+        childs.Clear();
+    }
+
 
 }
 
